@@ -6,12 +6,11 @@ const Canvas = () => {
   const isDrawing = useRef(false);
   const [prediction, setPrediction] = useState(null);
 
-  // Start drawing
   const handleMouseDown = (e) => {
     const ctx = canvasRef.current.getContext("2d");
-    ctx.lineWidth = 6;       // thinner strokes
+    ctx.lineWidth = 6;       
     ctx.lineCap = "round";
-    ctx.lineJoin = "round";  // smooth joins
+    ctx.lineJoin = "round";  
     ctx.strokeStyle = "black";
 
     isDrawing.current = true;
@@ -34,28 +33,25 @@ const Canvas = () => {
     isDrawing.current = false;
   };
 
-  // Clear canvas
   const handleClear = () => {
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     setPrediction(null);
   };
 
-  // Preprocess canvas to 28x28, crop, center, invert colors
   const preprocessImage = () => {
     const originalCanvas = canvasRef.current;
     const ctx = originalCanvas.getContext("2d");
     const imgData = ctx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
     const data = imgData.data;
 
-    // Find bounding box of the drawn digit
     let minX = originalCanvas.width, minY = originalCanvas.height;
     let maxX = 0, maxY = 0;
     for (let y = 0; y < originalCanvas.height; y++) {
       for (let x = 0; x < originalCanvas.width; x++) {
         const i = (y * originalCanvas.width + x) * 4;
         const brightness = data[i] + data[i + 1] + data[i + 2];
-        if (brightness < 750) { // anything not white
+        if (brightness < 750) { 
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
@@ -64,7 +60,7 @@ const Canvas = () => {
       }
     }
 
-    if (minX > maxX || minY > maxY) return originalCanvas.toDataURL("image/png"); // empty canvas
+    if (minX > maxX || minY > maxY) return originalCanvas.toDataURL("image/png"); 
 
     const boxWidth = maxX - minX;
     const boxHeight = maxY - minY;
@@ -73,7 +69,6 @@ const Canvas = () => {
     tmpCanvas.height = 28;
     const tmpCtx = tmpCanvas.getContext("2d");
 
-    // Scale and center the digit
     const scale = 20 / Math.max(boxWidth, boxHeight);
     const offsetX = (28 - boxWidth * scale) / 2;
     const offsetY = (28 - boxHeight * scale) / 2;
@@ -84,19 +79,17 @@ const Canvas = () => {
       offsetX, offsetY, boxWidth * scale, boxHeight * scale
     );
 
-    // Invert colors
     const tmpData = tmpCtx.getImageData(0, 0, 28, 28);
     for (let i = 0; i < tmpData.data.length; i += 4) {
-      tmpData.data[i] = 255 - tmpData.data[i];       // R
-      tmpData.data[i + 1] = 255 - tmpData.data[i + 1]; // G
-      tmpData.data[i + 2] = 255 - tmpData.data[i + 2]; // B
+      tmpData.data[i] = 255 - tmpData.data[i];       
+      tmpData.data[i + 1] = 255 - tmpData.data[i + 1]; 
+      tmpData.data[i + 2] = 255 - tmpData.data[i + 2]; 
     }
     tmpCtx.putImageData(tmpData, 0, 0);
 
     return tmpCanvas.toDataURL("image/png");
   };
 
-  // Predict digit
   const handlePredict = async () => {
     const dataUrl = preprocessImage();
     try {
