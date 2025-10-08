@@ -7,14 +7,14 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import os
 
-# Load MNIST
+
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
 x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
 y_train = to_categorical(y_train, 10)
 y_test = to_categorical(y_test, 10)
 
-# Data augmentation
+
 datagen = ImageDataGenerator(
     rotation_range=10,
     width_shift_range=0.1,
@@ -23,7 +23,7 @@ datagen = ImageDataGenerator(
 )
 datagen.fit(x_train)
 
-# Build improved CNN
+
 model = Sequential([
     Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
     MaxPooling2D(2,2),
@@ -38,17 +38,17 @@ model = Sequential([
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 
-# Callbacks
+
 os.makedirs('model', exist_ok=True)
 checkpoint = ModelCheckpoint('model/cnn_model_best.keras', save_best_only=True, monitor='val_accuracy', mode='max')
 early_stop = EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True)
 
-# Train with augmentation
+
 model.fit(datagen.flow(x_train, y_train, batch_size=128),
           validation_data=(x_test, y_test),
           epochs=15,
           callbacks=[checkpoint, early_stop])
 
-# Save final model
+
 model.save('model/cnn_model.keras')
 print("Model trained and saved as cnn_model.keras successfully!")
